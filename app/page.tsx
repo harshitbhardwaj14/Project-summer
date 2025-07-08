@@ -1,10 +1,11 @@
 'use client';
-
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { signIn, signOut, useSession } from 'next-auth/react';
 import { motion } from 'framer-motion';
-import './globals.css'; // Ensure global styles are imported
-
+import './globals.css';
+import './Home.css'
+import './summary.css';
+// Email type definition
 type Email = {
   id: string;
   snippet: string;
@@ -15,10 +16,10 @@ type Email = {
 export default function Home() {
   const { data: session, status } = useSession();
   const [emails, setEmails] = useState<Email[]>([]);
-  const [summary, setSummary] = useState<string | null>(null);
-  const [summarizing, setSummarizing] = useState(false);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [summary, setSummary] = useState('');
+  const [summarizing, setSummarizing] = useState(false);
   const observerRef = useRef(null);
 
   const fetchEmails = useCallback(async () => {
@@ -37,19 +38,6 @@ export default function Home() {
       setLoading(false);
     }
   }, [page]);
-
-  const handleSummarizeClick = async () => {
-    setSummarizing(true);
-    try {
-      const res = await fetch("/api/summarize-emails", { method: "POST" });
-      const data = await res.json();
-      setSummary(data.summary);
-    } catch (error) {
-      console.error("Failed to summarize emails", error);
-    } finally {
-      setSummarizing(false);
-    }
-  };
 
   useEffect(() => {
     if (session) fetchEmails();
@@ -76,20 +64,37 @@ export default function Home() {
   };
 
   const SkeletonCard = () => (
-    <div className="bg-neutral-900/50 backdrop-blur-lg border border-neutral-800/50 rounded-2xl p-5 animate-pulse space-y-3">
-      <div className="h-4 bg-neutral-800/50 rounded-full w-1/2" />
-      <div className="h-4 bg-neutral-800/50 rounded-full w-1/3" />
-      <div className="h-3 bg-neutral-800/50 rounded-full w-3/4 mt-2" />
+    <div className="card skeleton">
+      <div className="bar bar-half" />
+      <div className="bar bar-third" />
+      <div className="bar bar-large" />
     </div>
   );
 
+  const handleSummarize = async () => {
+    setSummarizing(true);
+    try {
+      const res = await fetch('/api/summarize-emails', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ emails: emails.slice(0, 10) }),
+      });
+      const data = await res.json();
+      setSummary(data.summary);
+    } catch (err) {
+      console.error("Failed to summarize emails:", err);
+    } finally {
+      setSummarizing(false);
+    }
+  };
+
   if (status === "loading") {
     return (
-      <div className="h-screen bg-gradient-to-br from-black to-neutral-950 text-white flex items-center justify-center">
-        <motion.div 
-          initial={{ opacity: 0 }} 
-          animate={{ opacity: 1 }} 
-          className="text-lg font-medium tracking-wide bg-neutral-900/30 backdrop-blur-lg px-6 py-4 rounded-2xl border border-neutral-800/50"
+      <div className="page loading">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="loader-box"
         >
           Loading...
         </motion.div>
@@ -99,16 +104,16 @@ export default function Home() {
 
   if (!session) {
     return (
-      <div className="h-screen bg-gradient-to-br from-black via-neutral-950 to-neutral-900 text-white flex flex-col items-center justify-center px-6 text-center">
-        <motion.div 
-          initial={{ opacity: 0, scale: 0.95 }} 
+      <div className="page center">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="bg-neutral-900/20 backdrop-blur-xl p-10 rounded-3xl border border-neutral-800/50 shadow-2xl"
+          className="signin-box"
         >
-          <motion.h1 
+          <motion.h1
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-4xl font-semibold mb-6 bg-gradient-to-r from-white to-neutral-300 bg-clip-text text-transparent"
+            className="heading"
           >
             Welcome to Mail Viewer
           </motion.h1>
@@ -116,7 +121,7 @@ export default function Home() {
             whileHover={{ scale: 1.04 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => signIn('google')}
-            className="bg-white/90 text-black font-medium px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
+            className="signin-btn"
           >
             Sign in with Google
           </motion.button>
@@ -126,36 +131,42 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-black to-neutral-950 text-white px-4 sm:px-6 py-8 font-sans">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="flex justify-between items-center mb-8 p-5 bg-neutral-900/30 backdrop-blur-lg rounded-2xl border border-neutral-800/50 shadow-lg">
-          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight bg-gradient-to-r from-white to-neutral-300 bg-clip-text text-transparent">
-            📬 Inbox
-          </h1>
-          <div className="flex gap-4">
+    <main className="page inbox">
+      <div className="container">
+        <div className="header">
+          <h1 className="title">📬 Inbox</h1>
+          <div className="actions" style={{ display: 'flex', gap: '1rem' }}>
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={handleSummarizeClick}
-              disabled={summarizing}
-              className="bg-white/90 text-black font-medium px-4 py-2 rounded-xl shadow hover:shadow-lg transition-all disabled:opacity-50"
+              onClick={handleSummarize}
+              className="summary-btn"
             >
-              {summarizing ? "Summarizing..." : "Summarize"}
+              {summarizing ? 'Summarizing...' : 'Summarize Top Emails'}
             </motion.button>
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => signOut()}
-              className="bg-white/90 text-black font-medium px-4 py-2 rounded-xl shadow hover:shadow-lg transition-all"
+              className="signout-btn"
             >
               Sign Out
             </motion.button>
           </div>
         </div>
 
-        {/* Email List */}
-        <ul className="space-y-4">
+        {summary && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="summary-box"
+          >
+            <h2 className="summary-title">🧠 Summary of Top Emails:</h2>
+            <p className="summary-text">{summary}</p>
+          </motion.div>
+        )}
+
+        <ul className="email-list">
           {emails.map((email, index) => {
             const isLast = index === emails.length - 1;
             return (
@@ -165,44 +176,27 @@ export default function Home() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3 }}
-                className="bg-neutral-900/40 backdrop-blur-lg border border-neutral-800/50 p-5 rounded-2xl shadow-sm hover:shadow-lg transition-all hover:border-neutral-700/50"
+                className="card email"
               >
-                <p className="text-sm text-neutral-300 mb-1">
-                  <span className="font-semibold text-white">From:</span> {email.headers?.find(h => h.name === "From")?.value}
-                </p>
-                <p className="text-sm text-neutral-300 mb-2">
-                  <span className="font-semibold text-white">Subject:</span> {email.headers?.find(h => h.name === "Subject")?.value}
-                </p>
-                <p className="text-sm text-neutral-400 mt-3 mb-3">{email.snippet}</p>
-                <p className="text-xs text-neutral-500 mt-2">{formatDate(email.internalDate)}</p>
+                <p className="meta"><strong>From:</strong> {email.headers?.find(h => h.name === "From")?.value}</p>
+                <p className="meta"><strong>Subject:</strong> {email.headers?.find(h => h.name === "Subject")?.value}</p>
+                <p className="snippet">{email.snippet}</p>
+                <p className="date">{formatDate(email.internalDate)}</p>
               </motion.li>
             );
           })}
         </ul>
 
-        {/* Skeleton Loading */}
-        <div className="mt-6 space-y-4">
+        <div className="loading-section">
           {loading && Array.from({ length: 3 }).map((_, i) => <SkeletonCard key={i} />)}
         </div>
 
-        {/* Summary Output */}
-        {summary && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="mt-8 p-6 bg-neutral-900/40 backdrop-blur-md border border-neutral-800/50 rounded-2xl text-sm leading-relaxed text-white shadow-md"
-          >
-            <h2 className="text-lg font-semibold mb-3">🧠 Summary of Top Emails:</h2>
-            <p className="whitespace-pre-line text-neutral-300">{summary}</p>
-          </motion.div>
-        )}
-
-        {/* End Message */}
         {!loading && emails.length > 0 && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="text-center text-neutral-500 text-sm mt-8 p-4 bg-neutral-900/20 backdrop-blur-lg rounded-2xl border border-neutral-800/50"
+            className="end-message"
+            style={{ alignItems:'center', display: 'flex', justifyContent: 'center', marginTop: '2rem' }}
           >
             You've reached the end of your inbox
           </motion.div>
