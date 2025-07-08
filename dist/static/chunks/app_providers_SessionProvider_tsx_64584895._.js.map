@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 7, "column": 0}, "map": {"version":3,"sources":["file:///C:/Users/Harshit%20Bhardwaj/Desktop/project-summer/app/providers/SessionProvider.tsx"],"sourcesContent":["// app/providers/SessionProvider.tsx\r\n'use client';\r\n\r\nimport { SessionProvider } from 'next-auth/react';\r\n\r\nexport default function AuthProvider({ children }: { children: React.ReactNode }) {\r\n  return <SessionProvider>{children}</SessionProvider>;\r\n}\r\n"],"names":[],"mappings":"AAAA,oCAAoC;;;;;AAGpC;AAFA;;;AAIe,SAAS,aAAa,EAAE,QAAQ,EAAiC;IAC9E,qBAAO,6LAAC,iJAAA,CAAA,kBAAe;kBAAE;;;;;;AAC3B;KAFwB","debugId":null}}]
+}

@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 1, "column": 0}, "map": {"version":3,"sources":["file:///C:/Users/Harshit%20Bhardwaj/Desktop/project-summer/app/globals.css"],"sourcesContent":["@import \"tailwindcss\";"],"names":[],"mappings":"","debugId":null}}]
+}
